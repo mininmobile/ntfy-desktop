@@ -5,13 +5,12 @@
     <TargetFramework>net6.0-windows</TargetFramework>
     <RootNamespace>ntfy_desktop.Wpf</RootNamespace>
   </PropertyGroup>
-  
+
   <ItemGroup>
     <ProjectReference Include="..\ntfy-desktop\ntfy-desktop.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Eto.Forms" Version="2.7.0" />
     <PackageReference Include="Eto.Platform.Wpf" Version="2.7.0" />
   </ItemGroup>
 

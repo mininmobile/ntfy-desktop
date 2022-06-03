@@ -6,6 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Images\*" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Eto.Forms" Version="2.7.0" />
   </ItemGroup>
 

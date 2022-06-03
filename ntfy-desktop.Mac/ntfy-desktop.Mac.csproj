@@ -1,5 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	
+
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net6.0</TargetFramework>
@@ -7,14 +7,13 @@
 
     <RuntimeIdentifiers>osx-x64;osx-arm64</RuntimeIdentifiers>
   </PropertyGroup>
-	
+
   <ItemGroup>
     <ProjectReference Include="..\ntfy-desktop\ntfy-desktop.csproj" />
   </ItemGroup>
-	
+
   <ItemGroup>
-    <PackageReference Include="Eto.Forms" Version="2.7.0" />
     <PackageReference Include="Eto.Platform.Mac64" Version="2.7.0" />
   </ItemGroup>
-	
+
 </Project>
