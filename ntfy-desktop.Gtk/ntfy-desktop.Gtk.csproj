@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <RootNamespace>ntfy_desktop.Gtk</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ntfy-desktop\ntfy-desktop.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Eto.Forms" Version="2.7.0" />
+    <PackageReference Include="Eto.Platform.Gtk" Version="2.7.0" />
+  </ItemGroup>
+	
+</Project>
