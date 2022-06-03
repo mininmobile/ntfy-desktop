@@ -4,10 +4,13 @@ using Eto.Drawing;
 
 namespace ntfy_desktop {
 	public partial class MainForm : Form {
+		public Label debugLabel;
 		public MainForm() {
 			Title = "NTFY Desktop";
 			Icon = Utility.ApplicationIcon;
 			MinimumSize = new Size(400, 600);
+
+			debugLabel = new Label { Text = "debug log:\n" };
 
 			// create commands
 			var quitCommand = new Command { MenuText = "Quit", Shortcut = Application.Instance.CommonModifier | Keys.Q };
@@ -35,7 +38,21 @@ namespace ntfy_desktop {
 			// create content
 			Content = new StackLayout {
 				Padding = 10,
+				Items = {
+					debugLabel,
+				}
 			};
+
+			// create ntfy.sh listener
+			var ntfyd = new NTFYD();
+			ntfyd.Subscribe("ntfy.sh", "balls");
+			ntfyd.MessageReceived += ntfyd_MessageReceived;
+		}
+
+		public void ntfyd_MessageReceived(object sender, System.EventArgs e) {
+			Application.Instance.Invoke(() => {
+				debugLabel.Text += ((MessageReceivedEventArgs)e).domain + "/" + ((MessageReceivedEventArgs)e).topic + ": " + ((MessageReceivedEventArgs)e).message + "\n";
+			});
 		}
 	}
 }
