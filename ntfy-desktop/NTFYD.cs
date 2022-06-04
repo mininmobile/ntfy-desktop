@@ -3,6 +3,8 @@ using System.IO;
 using System.Net.Sockets;
 using System.Threading;
 using System.Collections.Generic;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace ntfy_desktop {
 	public class NTFYD {
@@ -45,13 +47,13 @@ namespace ntfy_desktop {
 
 							while (!rdr.EndOfStream) {
 								var line = rdr.ReadLine();
-								if (!line.StartsWith("{") || !line.EndsWith("}"))
+								if (!line.StartsWith("{") || !line.EndsWith("}") || !line.Contains("\"event\":\"message\""))
 									continue;
 
 								OnMessageReceived(new MessageReceivedEventArgs {
 									domain = domain,
 									topic = topic,
-									message = line,
+									message = JsonNode.Parse(line),
 								});
 							}
 						}
@@ -75,6 +77,6 @@ namespace ntfy_desktop {
 	public class MessageReceivedEventArgs : EventArgs {
 		public string domain { get; set; }
 		public string topic { get; set; }
-		public string message { get; set; }
+		public JsonNode message { get; set; }
 	}
 }

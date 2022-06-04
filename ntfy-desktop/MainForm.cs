@@ -89,8 +89,8 @@ namespace ntfy_desktop {
 			}
 		}
 
-		public void OpenFromTray() {
-			if (WindowState == WindowState.Minimized) {
+		public void OpenFromTray(bool force = false) {
+			if (WindowState == WindowState.Minimized || force) {
 				_trayToggle.Text = "Hide";
 				ShowInTaskbar = true;
 				Visible = true;
@@ -111,9 +111,17 @@ namespace ntfy_desktop {
 				MinimizeToTray();
 		}
 
-		void ntfyd_MessageReceived(object sender, EventArgs e) {
+		void ntfyd_MessageReceived(object sender, EventArgs _e) {
+			MessageReceivedEventArgs e = (MessageReceivedEventArgs)_e;
 			Application.Instance.Invoke(() => {
-				_debugLabel.Text += ((MessageReceivedEventArgs)e).domain + "/" + ((MessageReceivedEventArgs)e).topic + ": " + ((MessageReceivedEventArgs)e).message + "\n";
+				using (var notification = new Notification()) {
+					notification.ID = e.message["id"].ToString();
+					notification.Message = e.message["message"].ToString();
+					notification.Title = e.message["title"]?.ToString();
+					notification.Show();
+				}
+
+				_debugLabel.Text += e.domain + "/" + e.topic + ": " + e.message.ToJsonString() + "\n";
 			});
 		}
 	}
