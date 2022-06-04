@@ -5,7 +5,7 @@ using Eto.Drawing;
 namespace ntfy_desktop {
 	public class CustomAboutDialog : Dialog {
 		public CustomAboutDialog() {
-			Title = "About NTFY Desktop";
+			Title = "About ntfy Desktop";
 			Icon = Utility.ApplicationIcon;
 			MinimumSize = new Size(450, 200);
 
@@ -21,7 +21,7 @@ namespace ntfy_desktop {
 						Spacing = 5,
 						Items = {
 							new Label {
-								Text = "NTFY Desktop",
+								Text = "ntfy Desktop",
 								Font = Fonts.Sans(24, FontStyle.Bold),
 							},
 							new Label {

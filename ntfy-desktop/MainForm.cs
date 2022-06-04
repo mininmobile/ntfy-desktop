@@ -6,7 +6,7 @@ namespace ntfy_desktop {
 	public partial class MainForm : Form {
 		public Label debugLabel;
 		public MainForm() {
-			Title = "NTFY Desktop";
+			Title = "ntfy Desktop";
 			Icon = Utility.ApplicationIcon;
 			MinimumSize = new Size(400, 600);
 
@@ -21,6 +21,21 @@ namespace ntfy_desktop {
 
 			var preferencesCommand = new Command { MenuText = "Preferences", Shortcut = Application.Instance.CommonModifier | Keys.Comma };
 			preferencesCommand.Executed += (sender, e) => new PreferencesDialog().ShowModalAsync();
+
+			// tray icon
+			var tray = new TrayIndicator {
+				Image = Utility.ApplicationLogo,
+				Title = "ntfy Desktop",
+				Menu = new ContextMenu {
+					Items = {
+						// show/hide
+						aboutCommand,
+						new Command { MenuText = "Preferences", DelegatedCommand = preferencesCommand },
+						new Command { MenuText = "Quit", DelegatedCommand = quitCommand },
+					}
+				}
+			};
+			tray.Show();
 
 			// create menu
 			Menu = new MenuBar {
@@ -47,6 +62,7 @@ namespace ntfy_desktop {
 			var ntfyd = new NTFYD();
 			ntfyd.Subscribe("ntfy.sh", "balls");
 			ntfyd.MessageReceived += ntfyd_MessageReceived;
+			Closed += (sender, e) => ntfyd.DisposeAll();
 		}
 
 		public void ntfyd_MessageReceived(object sender, System.EventArgs e) {

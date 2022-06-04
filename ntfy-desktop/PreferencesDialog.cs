@@ -5,7 +5,7 @@ using Eto.Drawing;
 namespace ntfy_desktop {
 	public class PreferencesDialog : Dialog {
 		public PreferencesDialog() {
-			Title = "NTFY Desktop Preferences";
+			Title = "ntfy Desktop Preferences";
 			Icon = Utility.ApplicationIcon;
 			MinimumSize = new Size(600, 400);
 			Resizable = true;

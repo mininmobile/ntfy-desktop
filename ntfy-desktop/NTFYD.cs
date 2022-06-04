@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace ntfy_desktop {
 	public class NTFYD {
-		private List<Thread> threads = new List<Thread>();
+		private List<TcpClient> _clients = new List<TcpClient>();
 		public event EventHandler MessageReceived;
 
 		public NTFYD() {
@@ -18,7 +18,6 @@ namespace ntfy_desktop {
 
 			var thread = GetSubscribeThread(domain, topic);
 			thread.Start();
-			threads.Add(thread);
 		}
 
 		private Thread GetSubscribeThread(string domain, string topic) {
@@ -32,33 +31,39 @@ namespace ntfy_desktop {
 
 					client.Connect(domain, 80);
 
-					using (NetworkStream stream = client.GetStream()) {
-						// send request
-						StreamWriter writer = new StreamWriter(stream);
-						writer.Write(requestString);
-						writer.Flush();
+					_clients.Add(client);
 
-						// process response
-						StreamReader rdr = new StreamReader(stream);
+					try {
+						using (NetworkStream stream = client.GetStream()) {
+							// send request
+							StreamWriter writer = new StreamWriter(stream);
+							writer.Write(requestString);
+							writer.Flush();
 
-						while (!rdr.EndOfStream) {
-							var line = rdr.ReadLine();
-							if (!line.StartsWith("{") || !line.EndsWith("}"))
-								continue;
+							// process response
+							StreamReader rdr = new StreamReader(stream);
 
-							OnMessageReceived(new MessageReceivedEventArgs {
-								domain = domain,
-								topic = topic,
-								message = line,
-							});
+							while (!rdr.EndOfStream) {
+								var line = rdr.ReadLine();
+								if (!line.StartsWith("{") || !line.EndsWith("}"))
+									continue;
+
+								OnMessageReceived(new MessageReceivedEventArgs {
+									domain = domain,
+									topic = topic,
+									message = line,
+								});
+							}
 						}
+					} catch {
+						// nothing
 					}
 				}
 			});
 		}
 
 		public void DisposeAll() {
-			threads.ForEach((thread) => thread.Abort());
+			_clients.ForEach((client) => client.Close());
 		}
 
 		protected virtual void OnMessageReceived(MessageReceivedEventArgs e) {
