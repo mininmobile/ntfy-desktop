@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Reflection;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text.Json.Nodes;
@@ -24,7 +23,7 @@ namespace ntfy_desktop {
 		}
 
 		public static JsonNode JsonFromResource(string resource) {
-			var assembly = Assembly.GetExecutingAssembly();
+			var assembly = System.Reflection.Assembly.GetExecutingAssembly();
 
 			using (Stream stream = assembly.GetManifestResourceStream(resource))
 				using (StreamReader reader = new StreamReader(stream))

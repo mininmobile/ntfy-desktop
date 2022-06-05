@@ -1,16 +1,25 @@
 using System;
+using System.Collections.Generic;
 using Eto.Forms;
 using Eto.Drawing;
 
 namespace ntfy_desktop {
 	public partial class MainForm : Form {
+		private AppSettings Settings => AppSettings.Default;
+
 		Label _debugLabel;
 		ButtonMenuItem _trayToggle;
 
 		public MainForm() {
+			// initialize settings
+			if (Settings.Feeds == null)
+				Settings.Feeds = new List<List<string>>();
+
+			// initialize gui
 			Title = "ntfy Desktop";
 			Icon = Utility.ApplicationIcon;
-			MinimumSize = new Size(400, 600);
+			MinimumSize = new Size(200, 150);
+			Size = new Size(400, 600);
 
 			_debugLabel = new Label { Text = "debug log:\n" };
 
@@ -39,8 +48,6 @@ namespace ntfy_desktop {
 				Menu = new ContextMenu {
 					Items = {
 						_trayToggle,
-						aboutCommand,
-						new Command { MenuText = "Preferences", DelegatedCommand = preferencesCommand },
 						new Command { MenuText = "Quit", DelegatedCommand = quitCommand },
 					}
 				}
@@ -71,9 +78,14 @@ namespace ntfy_desktop {
 
 			// create ntfy.sh listener
 			var ntfyd = new NTFYD();
-			ntfyd.Subscribe("ntfy.sh", "balls");
 			ntfyd.MessageReceived += ntfyd_MessageReceived;
 			Closed += (sender, e) => ntfyd.DisposeAll();
+
+			// subscribe to all feeds
+			Settings.Feeds.ForEach((feed) => {
+				_debugLabel.Text += $"subscribed to {feed[0]}/{feed[1]}\n";
+				ntfyd.Subscribe(feed[0], feed[1]);
+			});
 
 			// minimize to tray
 			WindowStateChanged += mainForm_windowStateChanged;
