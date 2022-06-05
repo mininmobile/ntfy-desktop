@@ -26,10 +26,9 @@ namespace ntfy_desktop {
 			return new Thread(() => {
 				using (TcpClient client = new TcpClient()) {
 					// generate request header
-					string requestString = "GET /" + topic + "/json HTTP/1.1\n";
-					requestString += "Host: " + domain + "\n";
-					requestString += "Connection: keep-alive\n";
-					requestString += "\n";
+					string requestString = $"GET /{topic}/json HTTP/1.1\n"
+						+ $"Host: {domain}\n"
+						+ "Connection: keep-alive\n\n";
 
 					client.Connect(domain, 80);
 
