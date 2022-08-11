@@ -12,7 +12,6 @@ namespace ntfy_desktop {
 
 		private static string _jsonSource;
 		private static AppSettings _appSettings = null;
-		private static string _basePath;
 
 		public static AppSettings Default {
 			get {

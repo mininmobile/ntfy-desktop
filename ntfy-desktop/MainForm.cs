@@ -7,8 +7,9 @@ using System.Text.Json.Nodes;
 namespace ntfy_desktop {
 	public partial class MainForm : Form {
 		private AppSettings Settings => AppSettings.Default;
+		private NTFYD ntfyd;
 
-		string debugLog = $"Debug Log {DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}\n\n";
+		string debugLog = $"Debug Log {DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}\n";
 		DebugLogDialog currentDebugLogDialog;
 		ButtonMenuItem _trayToggle;
 
@@ -33,7 +34,7 @@ namespace ntfy_desktop {
 			aboutCommand.Executed += (sender, e) => new CustomAboutDialog().ShowModalAsync();
 
 			var preferencesCommand = new Command { MenuText = "Preferences", Shortcut = Application.Instance.CommonModifier | Keys.Comma };
-			preferencesCommand.Executed += (sender, e) => new PreferencesDialog().ShowModalAsync();
+			preferencesCommand.Executed += (sender, e) => new PreferencesDialog(ntfyd).ShowModalAsync();
 
 			var debugLogCommand = new Command { MenuText = "Debug Log", Shortcut = Application.Instance.AlternateModifier | Keys.D };
 			debugLogCommand.Executed += (sender, e) => {
@@ -88,7 +89,7 @@ namespace ntfy_desktop {
 			};
 
 			// create ntfy.sh listener
-			var ntfyd = new NTFYD();
+			ntfyd = new NTFYD();
 			ntfyd.MessageReceived += ntfyd_MessageReceived;
 			Closed += (sender, e) => ntfyd.DisposeAll();
 
@@ -97,6 +98,7 @@ namespace ntfy_desktop {
 				debugLog += $"← subscribed to {feed[0]}/{feed[1]}\n";
 				ntfyd.Subscribe(feed[0], feed[1]);
 			});
+			debugLog += "\n";
 
 			// minimize to tray
 			WindowStateChanged += mainForm_windowStateChanged;
