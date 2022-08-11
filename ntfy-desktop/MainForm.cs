@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using Eto.Forms;
 using Eto.Drawing;
+using System.Text.Json.Nodes;
 
 namespace ntfy_desktop {
 	public partial class MainForm : Form {
 		private AppSettings Settings => AppSettings.Default;
 
-		Label _debugLabel;
+		string debugLog = $"Debug Log {DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}\n\n";
+		DebugLogDialog currentDebugLogDialog;
 		ButtonMenuItem _trayToggle;
 
 		public MainForm() {
@@ -21,7 +23,7 @@ namespace ntfy_desktop {
 			MinimumSize = new Size(200, 150);
 			Size = new Size(400, 600);
 
-			_debugLabel = new Label { Text = "debug log:\n" };
+			Closed += (sender, e) => Application.Instance.Quit();
 
 			// create commands
 			var quitCommand = new Command { MenuText = "Quit", Shortcut = Application.Instance.CommonModifier | Keys.Q };
@@ -32,6 +34,12 @@ namespace ntfy_desktop {
 
 			var preferencesCommand = new Command { MenuText = "Preferences", Shortcut = Application.Instance.CommonModifier | Keys.Comma };
 			preferencesCommand.Executed += (sender, e) => new PreferencesDialog().ShowModalAsync();
+
+			var debugLogCommand = new Command { MenuText = "Debug Log", Shortcut = Application.Instance.AlternateModifier | Keys.D };
+			debugLogCommand.Executed += (sender, e) => {
+				currentDebugLogDialog = new DebugLogDialog(debugLog);
+				currentDebugLogDialog.ShowModalAsync();
+			};
 
 			var toggleTrayCommand = new Command();
 			toggleTrayCommand.Executed += _toggleMinimizedToTray;
@@ -58,6 +66,9 @@ namespace ntfy_desktop {
 			// create menu
 			Menu = new MenuBar {
 				// application (OS X) or file menu (others)
+				HelpItems = {
+					debugLogCommand,
+				},
 				ApplicationItems = {
 					preferencesCommand,
 				},
@@ -72,7 +83,7 @@ namespace ntfy_desktop {
 			Content = new StackLayout {
 				Padding = 10,
 				Items = {
-					_debugLabel,
+					// todo
 				}
 			};
 
@@ -83,7 +94,7 @@ namespace ntfy_desktop {
 
 			// subscribe to all feeds
 			Settings.Feeds.ForEach((feed) => {
-				_debugLabel.Text += $"subscribed to {feed[0]}/{feed[1]}\n";
+				debugLog += $"← subscribed to {feed[0]}/{feed[1]}\n";
 				ntfyd.Subscribe(feed[0], feed[1]);
 			});
 
@@ -127,13 +138,20 @@ namespace ntfy_desktop {
 			MessageReceivedEventArgs e = (MessageReceivedEventArgs)_e;
 			Application.Instance.Invoke(() => {
 				using (var notification = new Notification()) {
-					notification.ID = e.message["id"].ToString();
-					notification.Message = e.message["message"].ToString();
-					notification.Title = e.message["title"]?.ToString();
+					notification.ID = e.json["id"].ToString();
+					notification.Message = e.json["message"].ToString();
+					notification.Title = e.json["title"]?.ToString();
 					notification.Show();
 				}
 
-				_debugLabel.Text += e.domain + "/" + e.topic + ": " + e.message.ToJsonString() + "\n";
+				debugLog += $"→ {new DateTime((long)e.json["time"] * 1000).ToShortTimeString()} | {e.domain}/{e.topic}\n";
+				foreach (var entry in e.json.AsObject()) {
+					if (entry.Key == "time" || entry.Key == "event" || entry.Key == "topic")
+						continue;
+
+					debugLog += $"· {entry.Key}: {entry.Value.ToJsonString()}\n";
+				}
+				currentDebugLogDialog.UpdateLog(debugLog);
 			});
 		}
 	}

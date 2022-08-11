@@ -49,10 +49,12 @@ namespace ntfy_desktop {
 								if (!line.StartsWith("{") || !line.EndsWith("}") || !line.Contains("\"event\":\"message\""))
 									continue;
 
+								var o = JsonNode.Parse(line);
+
 								OnMessageReceived(new MessageReceivedEventArgs {
 									domain = domain,
 									topic = topic,
-									message = JsonNode.Parse(line),
+									json = o,
 								});
 							}
 						}
@@ -76,6 +78,6 @@ namespace ntfy_desktop {
 	public class MessageReceivedEventArgs : EventArgs {
 		public string domain { get; set; }
 		public string topic { get; set; }
-		public JsonNode message { get; set; }
+		public JsonNode json { get; set; }
 	}
 }
