@@ -5,21 +5,41 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace ntfy_desktop {
 	public class NTFYD {
-		private List<TcpClient> _clients = new List<TcpClient>();
 		public event EventHandler MessageReceived;
 
-		public NTFYD() {
+		private List<TcpClient> _clients = new List<TcpClient>();
+		private AppSettings Settings => AppSettings.Default;
+		private DebugLog debugLog;
+		private List<List<string>> currentFeeds;
 
+		public NTFYD(DebugLog dl) {
+			debugLog = dl;
+
+			currentFeeds = Settings.Feeds.ToList();
+			currentFeeds.ForEach((feed) => Subscribe(feed[0], feed[1]));
+
+			AppSettings.Updated += (sender, e) => {
+				DisposeAll();
+				currentFeeds = Settings.Feeds.ToList();
+				currentFeeds.ForEach((feed) => Subscribe(feed[0], feed[1]));
+			};
 		}
 
 		public void Subscribe(string domain, string topic) {
-			// TODO: add to a list of subscriptions
-
 			var task = GetSubscribeThread(domain, topic);
-			task.ContinueWith((t) => { Console.WriteLine(t.Exception); }, TaskContinuationOptions.OnlyOnFaulted);
+			task.ContinueWith((t) => {
+				if (t.Exception == null)
+					debugLog.Log($"← closed {domain}/{topic}");
+				else
+					debugLog.Log($"! {t.Exception.GetType()}: {t.Exception.Message} @ {t.Exception.StackTrace}");
+			}, TaskContinuationOptions.OnlyOnFaulted);
+			task.ContinueWith((t) => {
+				debugLog.Log($"← unsubscribed from {domain}/{topic}");
+			}, TaskContinuationOptions.OnlyOnRanToCompletion);
 			task.Start();
 		}
 
@@ -34,28 +54,35 @@ namespace ntfy_desktop {
 					client.Connect(domain, 80);
 
 					_clients.Add(client);
-					using (NetworkStream stream = client.GetStream()) {
-						// send request
-						StreamWriter writer = new StreamWriter(stream);
-						writer.Write(requestString);
-						writer.Flush();
 
-						// process response
-						StreamReader rdr = new StreamReader(stream);
+					try {
+						using (NetworkStream stream = client.GetStream()) {
+							// send request
+							StreamWriter writer = new StreamWriter(stream);
+							writer.Write(requestString);
+							writer.Flush();
 
-						while (!rdr.EndOfStream) {
-							var line = rdr.ReadLine();
-							if (!line.StartsWith("{") || !line.EndsWith("}") || !line.Contains("\"event\":\"message\""))
-								continue;
+							// process response
+							StreamReader rdr = new StreamReader(stream);
+							debugLog.Log($"← subscribed to {domain}/{topic}");
 
-							var o = JsonNode.Parse(line);
+							while (!rdr.EndOfStream) {
+								var line = rdr.ReadLine();
+								if (!line.StartsWith("{") || !line.EndsWith("}") || !line.Contains("\"event\":\"message\""))
+									continue;
 
-							OnMessageReceived(new MessageReceivedEventArgs {
-								domain = domain,
-								topic = topic,
-								json = o,
-							});
+								var o = JsonNode.Parse(line);
+
+								OnMessageReceived(new MessageReceivedEventArgs {
+									domain = domain,
+									topic = topic,
+									json = o,
+								});
+							}
 						}
+					} catch (Exception e) {
+						if (e.GetType() != typeof(System.IO.IOException))
+							debugLog.Log($"! {e.GetType()}: {e.Message} @ {e.StackTrace}");
 					}
 				}
 			});
@@ -63,11 +90,11 @@ namespace ntfy_desktop {
 
 		public void DisposeAll() {
 			_clients.ForEach((client) => client.Close());
+			_clients.Clear();
 		}
 
 		protected virtual void OnMessageReceived(MessageReceivedEventArgs e) {
-			EventHandler handler = MessageReceived;
-			handler?.Invoke(this, e);
+			MessageReceived?.Invoke(this, e);
 		}
 	}
 

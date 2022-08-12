@@ -7,7 +7,6 @@ using System.Net;
 namespace ntfy_desktop {
 	public class PreferencesDialog : Dialog {
 		private AppSettings Settings => AppSettings.Default;
-		private Scrollable layout;
 		private NTFYD ntfyd;
 
 		public PreferencesDialog(NTFYD _ntfyd) {
@@ -40,7 +39,6 @@ namespace ntfy_desktop {
 				Command removeCommand = new Command();
 				removeCommand.Executed += (sender, e) => {
 					Settings.Feeds.Remove(feed);
-					Settings.Save();
 					UpdateSettings();
 				};
 
@@ -58,10 +56,7 @@ namespace ntfy_desktop {
 			subscribeCommand.Executed += (sender, e) => {
 				if (subscribeDomain.Length > 4 && subscribeDomain.Contains(".")
 					&& subscribeTopic.Length > 0) {
-					ntfyd.Subscribe(subscribeDomain, subscribeTopic);
-
 					Settings.Feeds.Add(new List<string>{subscribeDomain, subscribeTopic});
-					Settings.Save();
 					UpdateSettings();
 				}
 			};
@@ -79,6 +74,18 @@ namespace ntfy_desktop {
 			));
 
 			// create main layout
+			var okCommand = new Command(); okCommand.Executed += (sender, e) => {
+				Settings.Save();
+				Close();
+			};
+			var applyCommand = new Command(); applyCommand.Executed += (sender, e) => {
+				Settings.Save();
+			};
+			var cancelCommand = new Command(); cancelCommand.Executed += (sender, e) => {
+				Settings.Revert();
+				Close();
+			};
+
 			Content = new Scrollable{
 				Border = BorderType.None,
 				Content = new StackLayout{
@@ -87,6 +94,15 @@ namespace ntfy_desktop {
 					Items = {
 						new Label { Text = "Subscribed Topics", Font = Fonts.Sans(9, FontStyle.Bold) },
 						feeds,
+						new StackLayoutItem(new StackLayout {
+							Spacing = 10,
+							Orientation = Orientation.Horizontal,
+							Items = {
+								new Button { Text = "Ok", Width = 80, Command = okCommand },
+								new Button { Text = "Cancel", Width = 80, Command = cancelCommand },
+								new Button { Text = "Apply", Width = 80, Command = applyCommand },
+							}
+						}, HorizontalAlignment.Right),
 					}
 				}
 			};

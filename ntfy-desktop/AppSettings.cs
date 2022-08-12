@@ -3,15 +3,20 @@ using System.IO;
 using System.Text.Json;
 using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
+using System.Linq;
 
 namespace ntfy_desktop {
 	public class AppSettings {
+		// marked as private to prevent outside classes from creating new
 		private AppSettings() {
-			// marked as private to prevent outside classes from creating new.
+
 		}
 
 		private static string _jsonSource;
 		private static AppSettings _appSettings = null;
+		private static AppSettings _mutableAppSettings = null;
+
+		public static event EventHandler Updated;
 
 		public static AppSettings Default {
 			get {
@@ -24,16 +29,25 @@ namespace ntfy_desktop {
 
 					var config = builder.Build();
 					_appSettings = new AppSettings();
+					_mutableAppSettings = new AppSettings();
 					config.Bind(_appSettings);
+					config.Bind(_mutableAppSettings);
 				}
 
-				return _appSettings;
+				return _mutableAppSettings;
 			}
 		}
 
 		public void Save() {
+			_appSettings.Feeds = _mutableAppSettings.Feeds.ToList();
+
 			string json = JsonSerializer.Serialize(_appSettings);
 			System.IO.File.WriteAllText(_jsonSource, json);
+			Updated.Invoke(this, null);
+		}
+
+		public void Revert() {
+			_mutableAppSettings.Feeds = _appSettings.Feeds.ToList();
 		}
 
 		// contents arranged like this: [ ["domain", "topic"], ... ]

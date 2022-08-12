@@ -9,11 +9,14 @@ namespace ntfy_desktop {
 		private AppSettings Settings => AppSettings.Default;
 		private NTFYD ntfyd;
 
-		string debugLog = $"Debug Log {DateTime.Now.ToShortDateString()} {DateTime.Now.ToLongTimeString()}\n";
-		DebugLogDialog currentDebugLogDialog;
+		DebugLog debugLog;
+		DebugLogForm currentDebugLogForm;
 		ButtonMenuItem _trayToggle;
 
 		public MainForm() {
+			// initialize debug log
+			debugLog = new DebugLog();
+
 			// initialize settings
 			if (Settings.Feeds == null)
 				Settings.Feeds = new List<List<string>>();
@@ -38,8 +41,13 @@ namespace ntfy_desktop {
 
 			var debugLogCommand = new Command { MenuText = "Debug Log", Shortcut = Application.Instance.AlternateModifier | Keys.D };
 			debugLogCommand.Executed += (sender, e) => {
-				currentDebugLogDialog = new DebugLogDialog(debugLog);
-				currentDebugLogDialog.ShowModalAsync();
+				if (currentDebugLogForm == null) {
+					currentDebugLogForm = new DebugLogForm(debugLog);
+					currentDebugLogForm.Closed += (_sender, _e) => currentDebugLogForm = null;
+					currentDebugLogForm.Show();
+				} else {
+					currentDebugLogForm.BringToFront();
+				}
 			};
 
 			var toggleTrayCommand = new Command();
@@ -89,16 +97,9 @@ namespace ntfy_desktop {
 			};
 
 			// create ntfy.sh listener
-			ntfyd = new NTFYD();
+			ntfyd = new NTFYD(debugLog);
 			ntfyd.MessageReceived += ntfyd_MessageReceived;
 			Closed += (sender, e) => ntfyd.DisposeAll();
-
-			// subscribe to all feeds
-			Settings.Feeds.ForEach((feed) => {
-				debugLog += $"← subscribed to {feed[0]}/{feed[1]}\n";
-				ntfyd.Subscribe(feed[0], feed[1]);
-			});
-			debugLog += "\n";
 
 			// minimize to tray
 			WindowStateChanged += mainForm_windowStateChanged;
@@ -110,7 +111,7 @@ namespace ntfy_desktop {
 			} else {
 				_trayToggle.Text = "Show";
 				ShowInTaskbar = false;
-				Visible = false;
+				Visible = true;
 			}
 		}
 
@@ -146,14 +147,13 @@ namespace ntfy_desktop {
 					notification.Show();
 				}
 
-				debugLog += $"→ {new DateTime((long)e.json["time"] * 1000).ToShortTimeString()} | {e.domain}/{e.topic}\n";
+				debugLog.Log($"→ {new DateTime((long)e.json["time"] * 1000).ToShortTimeString()} | {e.domain}/{e.topic}");
 				foreach (var entry in e.json.AsObject()) {
 					if (entry.Key == "time" || entry.Key == "event" || entry.Key == "topic")
 						continue;
 
-					debugLog += $"· {entry.Key}: {entry.Value.ToJsonString()}\n";
+					debugLog.Log($"· {entry.Key}: {entry.Value.ToJsonString()}");
 				}
-				currentDebugLogDialog.UpdateLog(debugLog);
 			});
 		}
 	}

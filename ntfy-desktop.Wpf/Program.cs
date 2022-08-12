@@ -8,7 +8,9 @@ namespace ntfy_desktop.Wpf
 		[STAThread]
 		public static void Main(string[] args)
 		{
-			new Application(Eto.Platforms.Wpf).Run(new MainForm());
+			Application app = new Application(Eto.Platforms.Wpf);
+			app.NotificationActivated += (sender, e) => ((MainForm)app.MainForm).OpenFromTray(true);
+			app.Run(new MainForm());
 		}
 	}
 }
