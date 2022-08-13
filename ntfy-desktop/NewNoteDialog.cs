@@ -74,22 +74,29 @@ namespace ntfy_desktop {
 				if (notePriority != 3) fields.Add($"\"priority\": {notePriority.ToString()}");
 
 				if (noteTags.Trim().Length > 0) {
-					// todo: sanitize input and add to json
+					var allTags = noteTags.Split(',');
+					var tags = new List<string>();
+					for (var i = 0; i < allTags.Length; i++) {
+						var t = allTags[i].Trim().Replace("\"", "\\\"");
+						if (t.Length > 0) tags.Add(t);
+					}
+
+					fields.Add($"\"tags\": [\"{string.Join("\",\"", tags)}\"]");
 				}
 
-				var json = "{" + string.Join(",", fields.ToArray()) + "}";
+				var json = "{" + string.Join(",", fields) + "}";
 				var content = new StringContent(json);
 
+				Application.Instance.InvokeAsync(() => debugLog.Log($"{json} → {destinationDomain}/{destinationTopic}"));
+
 				new Thread(async () => {
-					var output = $"{json} → {destinationDomain}/{destinationTopic}";
 					try {
 						using (HttpClient client = new HttpClient())
 						await client.PostAsync($"https://{destinationDomain}", content);
 					} catch (Exception err) {
-						output += "\n" + err.ToString();
+						Application.Instance.Invoke(() => debugLog.Log(err.ToString()));
 					}
 
-					Application.Instance.Invoke(() => debugLog.Log(output));
 				}).Start();
 
 				Close();
