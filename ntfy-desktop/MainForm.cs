@@ -12,10 +12,15 @@ namespace ntfy_desktop {
 		DebugLog debugLog;
 		DebugLogForm currentDebugLogForm;
 		ButtonMenuItem _trayToggle;
+		List<MessageReceivedEventArgs> notifications;
 
 		public MainForm() {
 			// initialize debug log
 			debugLog = new DebugLog();
+
+			// initialize notification log
+			// todo: import from save file
+			notifications = new List<MessageReceivedEventArgs>();
 
 			// initialize settings
 			if (Settings.Feeds == null)
@@ -89,12 +94,7 @@ namespace ntfy_desktop {
 			ToolBar = new ToolBar { Items = { } };
 
 			// create content
-			Content = new StackLayout {
-				Padding = 10,
-				Items = {
-					// todo
-				}
-			};
+			InitContent();
 
 			// create ntfy.sh listener
 			ntfyd = new NTFYD(debugLog);
@@ -139,6 +139,7 @@ namespace ntfy_desktop {
 
 		void ntfyd_MessageReceived(object sender, EventArgs _e) {
 			MessageReceivedEventArgs e = (MessageReceivedEventArgs)_e;
+			notifications.Insert(0, e);
 			Application.Instance.Invoke(() => {
 				using (var notification = new Notification()) {
 					notification.ID = e.json["id"].ToString();
@@ -147,14 +148,42 @@ namespace ntfy_desktop {
 					notification.Show();
 				}
 
-				debugLog.Log($"→ {new DateTime((long)e.json["time"] * 1000).ToShortTimeString()} | {e.domain}/{e.topic}");
+				if (Visible) InitContent();
+
+				debugLog.Log($"→ {new DateTime(long.Parse(e.json["time"].ToString() + "000")).ToShortTimeString()} | {e.json["id"].ToString()} | {e.domain}/{e.topic}");
 				foreach (var entry in e.json.AsObject()) {
-					if (entry.Key == "time" || entry.Key == "event" || entry.Key == "topic")
+					if (entry.Key == "time" || entry.Key == "id" || entry.Key == "event" || entry.Key == "topic")
 						continue;
 
 					debugLog.Log($"· {entry.Key}: {entry.Value.ToJsonString()}");
 				}
 			});
+		}
+
+		// re-render the Content
+		void InitContent() {
+			var feed = new TableLayout{
+				Spacing = new Size(0, 10),
+			};
+
+			notifications.ForEach((notification) => {
+				var dismissCommand = new Command();
+				dismissCommand.Executed += (sender, e) => {
+					notifications.Remove(notification);
+					InitContent();
+				};
+
+				feed.Rows.Add(new TableRow(new TableCell(new Card(notification, dismissCommand))));
+			});
+			feed.Rows.Add(null);
+
+			Content = new Scrollable{
+				Padding = 10,
+				ExpandContentWidth = true,
+				Content = feed,
+				ScrollPosition = new Point(0, 0),
+				ScrollSize = new Size(200, 150), // min size of window content, ensures that horizontal scrollbar never shows unless you really want it to
+			};
 		}
 	}
 }
