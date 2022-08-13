@@ -1,10 +1,14 @@
 using System;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Threading;
 using Eto.Drawing;
 using Eto.Forms;
 
 namespace ntfy_desktop {
 	class NewNoteDialog : Dialog {
 		private AppSettings Settings => AppSettings.Default;
+		private DebugLog debugLog;
 		private ListItemCollection priorities = new ListItemCollection();
 
 		string noteTitle = "";
@@ -15,7 +19,9 @@ namespace ntfy_desktop {
 		string destinationDomain = "";
 		string destinationTopic = "";
 
-		public NewNoteDialog(bool large = false) {
+		public NewNoteDialog(DebugLog dl) {
+			debugLog = dl;
+
 			priorities.Add("Min Priority");
 			priorities.Add("Low Priority");
 			priorities.Add("Default Priority");
@@ -29,7 +35,7 @@ namespace ntfy_desktop {
 			Icon = Utility.ApplicationIcon;
 			Resizable = false;
 
-			InitContent(large);
+			InitContent();
 		}
 
 		private void InitContent(bool large = false) {
@@ -58,13 +64,35 @@ namespace ntfy_desktop {
 
 			var sendCommand = new Command();
 			sendCommand.Executed += (sender, e) => {
-				if (noteMessage.Trim().Length == 0) {
-					MessageBox.Show("Note message is required.", MessageBoxType.Warning);
-				} else {
-					// todo: send
+				if (noteMessage.Trim().Length == 0)
+					noteMessage = "triggered";
 
-					Close();
+				var fields = new List<string>();
+				fields.Add($"\"topic\": \"{destinationTopic}\"");
+				fields.Add($"\"message\": \"{noteMessage.Replace("\"", "\\\"").Replace("\r", "").Replace("\n", "\\n").Replace("\n", "")}\"");
+				if (noteTitle.Length > 0) fields.Add($"\"title\": \"{noteTitle.Replace("\"", "\\\"")}\"");
+				if (notePriority != 3) fields.Add($"\"priority\": {notePriority.ToString()}");
+
+				if (noteTags.Trim().Length > 0) {
+					// todo: sanitize input and add to json
 				}
+
+				var json = "{" + string.Join(",", fields.ToArray()) + "}";
+				var content = new StringContent(json);
+
+				new Thread(async () => {
+					var output = $"{json} → {destinationDomain}/{destinationTopic}";
+					try {
+						using (HttpClient client = new HttpClient())
+						await client.PostAsync($"https://{destinationDomain}", content);
+					} catch (Exception err) {
+						output += "\n" + err.ToString();
+					}
+
+					Application.Instance.Invoke(() => debugLog.Log(output));
+				}).Start();
+
+				Close();
 			};
 			var sendButton = new Button { Text = "Send", Command = sendCommand };
 

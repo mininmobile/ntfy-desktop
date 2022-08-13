@@ -36,7 +36,7 @@ namespace ntfy_desktop {
 
 			// create commands
 			var newCommand = new Command { MenuText = "New Note", ToolBarText = "New", Shortcut = Application.Instance.CommonModifier | Keys.N };
-			newCommand.Executed += (sender, e) => new NewNoteDialog().ShowModalAsync();
+			newCommand.Executed += (sender, e) => new NewNoteDialog(debugLog).ShowModalAsync();
 
 			var quitCommand = new Command { MenuText = "Quit", Shortcut = Application.Instance.CommonModifier | Keys.Q };
 			quitCommand.Executed += (sender, e) => Application.Instance.Quit();
