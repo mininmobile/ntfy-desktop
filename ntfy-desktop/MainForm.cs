@@ -35,6 +35,9 @@ namespace ntfy_desktop {
 			Closed += (sender, e) => Application.Instance.Quit();
 
 			// create commands
+			var newCommand = new Command { MenuText = "New Note", ToolBarText = "New", Shortcut = Application.Instance.CommonModifier | Keys.N };
+			newCommand.Executed += (sender, e) => new NewNoteDialog().ShowModalAsync();
+
 			var quitCommand = new Command { MenuText = "Quit", Shortcut = Application.Instance.CommonModifier | Keys.Q };
 			quitCommand.Executed += (sender, e) => Application.Instance.Quit();
 
@@ -91,7 +94,9 @@ namespace ntfy_desktop {
 			};
 
 			// create toolbar
-			ToolBar = new ToolBar { Items = { } };
+			ToolBar = new ToolBar { Items = {
+				newCommand,
+			} };
 
 			// create content
 			InitContent();
@@ -182,7 +187,7 @@ namespace ntfy_desktop {
 				ExpandContentWidth = true,
 				Content = feed,
 				ScrollPosition = new Point(0, 0),
-				ScrollSize = new Size(200, 150), // min size of window content, ensures that horizontal scrollbar never shows unless you really want it to
+				ScrollSize = new Size(200, default), // min size of window content, ensures that horizontal scrollbar never shows unless you really want it to
 			};
 		}
 	}
