@@ -7,7 +7,7 @@ using Eto.Forms;
 
 namespace ntfy_desktop {
 	class NewNoteDialog : Dialog {
-		private AppSettings Settings => AppSettings.Default;
+		private AppConfig Settings => AppSettings.Default;
 		private DebugLog debugLog;
 		private ListItemCollection priorities = new ListItemCollection();
 
@@ -18,6 +18,14 @@ namespace ntfy_desktop {
 		int selectedIndex = 0;
 		string destinationDomain = "";
 		string destinationTopic = "";
+
+		public static NewNoteDialog LaunchNewNoteDialog(DebugLog dl) {
+			if (AppSettings.Default.Feeds.Count > 0)
+				return new NewNoteDialog(dl);
+
+			MessageBox.Show("Please subscribe to feeds in preferences first.");
+			return null;
+		}
 
 		public NewNoteDialog(DebugLog dl) {
 			debugLog = dl;

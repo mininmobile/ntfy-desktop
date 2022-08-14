@@ -6,7 +6,7 @@ using System.Text.Json.Nodes;
 
 namespace ntfy_desktop {
 	public partial class MainForm : Form {
-		private AppSettings Settings => AppSettings.Default;
+		private AppConfig Settings => AppSettings.Default;
 		private NTFYD ntfyd;
 
 		DebugLog debugLog;
@@ -36,7 +36,7 @@ namespace ntfy_desktop {
 
 			// create commands
 			var newCommand = new Command { MenuText = "New Note", ToolBarText = "New", Shortcut = Application.Instance.CommonModifier | Keys.N };
-			newCommand.Executed += (sender, e) => new NewNoteDialog(debugLog).ShowModalAsync();
+			newCommand.Executed += (sender, e) => NewNoteDialog.LaunchNewNoteDialog(debugLog)?.ShowModalAsync();
 
 			var quitCommand = new Command { MenuText = "Quit", Shortcut = Application.Instance.CommonModifier | Keys.Q };
 			quitCommand.Executed += (sender, e) => Application.Instance.Quit();
@@ -100,6 +100,8 @@ namespace ntfy_desktop {
 
 			// create content
 			InitContent();
+			BackgroundColor = Settings.Theme[0].ToColor();
+			AppSettings.TempUpdated += (sender, e) => Application.Instance.Invoke(() => Content.BackgroundColor = Settings.Theme[0].ToColor());
 
 			// create ntfy.sh listener
 			ntfyd = new NTFYD(debugLog);

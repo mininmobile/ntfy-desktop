@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Net.Sockets;
 using System.Collections.Generic;
-using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using System.Linq;
@@ -12,7 +11,7 @@ namespace ntfy_desktop {
 		public event EventHandler MessageReceived;
 
 		private List<TcpClient> _clients = new List<TcpClient>();
-		private AppSettings Settings => AppSettings.Default;
+		private AppConfig Settings => AppSettings.Default;
 		private DebugLog debugLog;
 		private List<List<string>> currentFeeds;
 
