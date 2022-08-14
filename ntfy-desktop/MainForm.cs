@@ -191,6 +191,8 @@ namespace ntfy_desktop {
 				ScrollPosition = new Point(0, 0),
 				ScrollSize = new Size(200, default), // min size of window content, ensures that horizontal scrollbar never shows unless you really want it to
 			};
+
+			BackgroundColor = Settings.Theme[0].ToColor();
 		}
 	}
 }
