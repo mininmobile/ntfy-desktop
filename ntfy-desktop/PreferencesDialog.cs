@@ -79,7 +79,12 @@ namespace ntfy_desktop {
 			var theme = new TableLayout {
 				Spacing = new Size(5, 5), // space between each cell
 				Padding = new Padding(0, 10, 0, 10), // space around the table's sides
-				Rows = { new TableRow(" Preview", " R", null, " G", null, " B", null, " A", null) },
+				Rows = { new TableRow("Preview",
+					new TableCell(" R", true), new TableCell(null, false),
+					new TableCell(" G", true), new TableCell(null, false),
+					new TableCell(" B", true), new TableCell(null, false),
+					new TableCell(" A", true), new TableCell(null, false))
+				},
 			};
 
 			for (var _i = 0; _i < Settings.Theme.Count; _i++) {
@@ -92,7 +97,7 @@ namespace ntfy_desktop {
 
 				// red
 				var rSlider = new Slider{ Value = color.R, MinValue = 0, MaxValue = 255, Width = 60 };
-				var rBox = new NumericStepper{ Value = color.R, MinValue = 0, MaxValue = 255, Width = 40 };
+				var rBox = new NumericStepper{ Value = color.R, MinValue = 0, MaxValue = 255, Width = 60 };
 				rSlider.ValueChanged += (sender, e) => {
 					if (!rSlider.HasFocus) return;
 					rBox.Value = Settings.Theme[i].R = rSlider.Value;
@@ -105,7 +110,7 @@ namespace ntfy_desktop {
 
 				// green
 				var gSlider = new Slider{ Value = color.G, MinValue = 0, MaxValue = 255, Width = 60 };
-				var gBox = new NumericStepper{ Value = color.G, MinValue = 0, MaxValue = 255, Width = 40 };
+				var gBox = new NumericStepper{ Value = color.G, MinValue = 0, MaxValue = 255, Width = 60 };
 				gSlider.ValueChanged += (sender, e) => { if (!gSlider.HasFocus) return;
 					gBox.Value = Settings.Theme[i].G = gSlider.Value;
 					preview.BackgroundColor = Settings.Theme[i].ToColor(); AppSettings.UpdateTemp(); };
@@ -115,7 +120,7 @@ namespace ntfy_desktop {
 
 				// blue
 				var bSlider = new Slider{ Value = color.B, MinValue = 0, MaxValue = 255, Width = 60 };
-				var bBox = new NumericStepper{ Value = color.B, MinValue = 0, MaxValue = 255, Width = 40 };
+				var bBox = new NumericStepper{ Value = color.B, MinValue = 0, MaxValue = 255, Width = 60 };
 				bSlider.ValueChanged += (sender, e) => { if (!bSlider.HasFocus) return;
 					bBox.Value = Settings.Theme[i].B = bSlider.Value;
 					preview.BackgroundColor = Settings.Theme[i].ToColor(); AppSettings.UpdateTemp(); };
@@ -125,7 +130,7 @@ namespace ntfy_desktop {
 
 				// alpha
 				var aSlider = new Slider{ Value = color.A, MinValue = 0, MaxValue = 255, Width = 60 };
-				var aBox = new NumericStepper{ Value = color.A, MinValue = 0, MaxValue = 255, Width = 40 };
+				var aBox = new NumericStepper{ Value = color.A, MinValue = 0, MaxValue = 255, Width = 60 };
 				aSlider.ValueChanged += (sender, e) => { if (!aSlider.HasFocus) return;
 					aBox.Value = Settings.Theme[i].A = aSlider.Value;
 					preview.BackgroundColor = Settings.Theme[i].ToColor(); AppSettings.UpdateTemp(); };
@@ -154,22 +159,30 @@ namespace ntfy_desktop {
 			Content = new Scrollable{
 				Border = BorderType.None,
 				Content = new StackLayout{
-					Padding = 10,
 					HorizontalContentAlignment = HorizontalAlignment.Stretch,
 					Items = {
-						new Label { Text = "Subscribed Topics", Font = Fonts.Sans(9, FontStyle.Bold) },
-						feeds,
-						new Label { Text = "Feed Theme", Font = Fonts.Sans(9, FontStyle.Bold) },
-						theme,
-						new StackLayoutItem(new StackLayout {
+						new StackLayout {
+							Padding = 10,
+							HorizontalContentAlignment = HorizontalAlignment.Stretch,
+							Items = {
+								new Label { Text = "Subscribed Topics", Font = Fonts.Sans(9, FontStyle.Bold) },
+								feeds,
+								new Label { Text = "Feed Theme", Font = Fonts.Sans(9, FontStyle.Bold) },
+								theme,
+							}
+						},
+						new StackLayout {
+							Padding = new Padding(10, 0),
 							Spacing = 10,
 							Orientation = Orientation.Horizontal,
+							HorizontalContentAlignment = HorizontalAlignment.Right,
 							Items = {
+								null,
 								new Button { Text = "Ok", Width = 80, Command = okCommand },
 								new Button { Text = "Cancel", Width = 80, Command = cancelCommand },
-								new Button { Text = "Apply", Width = 80, Command = applyCommand },
+								new Button { Text = "Apply", Width = 80, Command = applyCommand }
 							}
-						}, HorizontalAlignment.Right),
+						}
 					}
 				}
 			};

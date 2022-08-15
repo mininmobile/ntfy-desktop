@@ -35,7 +35,7 @@ namespace ntfy_desktop {
 			Closed += (sender, e) => Application.Instance.Quit();
 
 			// create commands
-			var newCommand = new Command { MenuText = "New Note", ToolBarText = "New", Shortcut = Application.Instance.CommonModifier | Keys.N };
+			var newCommand = new Command { MenuText = "New Note", ToolBarText = "New Note", Shortcut = Application.Instance.CommonModifier | Keys.N };
 			newCommand.Executed += (sender, e) => NewNoteDialog.LaunchNewNoteDialog(debugLog)?.ShowModalAsync();
 
 			var quitCommand = new Command { MenuText = "Quit", Shortcut = Application.Instance.CommonModifier | Keys.Q };
@@ -44,7 +44,7 @@ namespace ntfy_desktop {
 			var aboutCommand = new Command { MenuText = "About" };
 			aboutCommand.Executed += (sender, e) => new CustomAboutDialog().ShowModalAsync();
 
-			var preferencesCommand = new Command { MenuText = "Preferences", Shortcut = Application.Instance.CommonModifier | Keys.Comma };
+			var preferencesCommand = new Command { MenuText = "Preferences", ToolBarText = "Preferences", Shortcut = Application.Instance.CommonModifier | Keys.Comma };
 			preferencesCommand.Executed += (sender, e) => new PreferencesDialog(ntfyd).ShowModalAsync();
 
 			var debugLogCommand = new Command { MenuText = "Debug Log", Shortcut = Application.Instance.AlternateModifier | Keys.D };
@@ -87,6 +87,7 @@ namespace ntfy_desktop {
 					debugLogCommand,
 				},
 				ApplicationItems = {
+					newCommand,
 					preferencesCommand,
 				},
 				QuitItem = quitCommand,
@@ -95,6 +96,7 @@ namespace ntfy_desktop {
 
 			// create toolbar
 			ToolBar = new ToolBar { Items = {
+				preferencesCommand,
 				newCommand,
 			} };
 
